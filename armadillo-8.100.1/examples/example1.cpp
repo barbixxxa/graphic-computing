@@ -338,12 +338,6 @@ int main() {
 	materialTriangle.ke << 0.0 << 0.0 << 0.0;
 	materialTriangle.shininess = 20.0;
 
-	ofstream output;
-	output.open("imagem.pgm");
-	output << "P3" << endl;
-	output << "800 600" << endl;
-	output << "255" << endl;
-
 	Material materialSphere;
 	materialSphere.kd << 0.0 << 0.0 << 255.0;
 	materialSphere.ke << 255.0 << 255.0 << 255.0;
@@ -353,6 +347,13 @@ int main() {
 	materialSphereB.kd << 255.0 << 0.0 << 0.0;
 	materialSphereB.ke << 255.0 << 255.0 << 255.0;
 	materialSphereB.shininess = 20.0;
+
+	ofstream output;
+	output.open("imagem.pgm");
+	output << "P3" << endl;
+	output << "800 600" << endl;
+	output << "255" << endl;
+	
 
 	
 	vec origin;
@@ -366,6 +367,22 @@ int main() {
 	//objetos = loadObject("cubonovo.txt", materialTriangle); //carregar objeto
 	objetos.push_back(new Sphere(centro, 1.0, materialSphere));
 	objetos.push_back(new Sphere(centro2, 1.0, materialSphereB));
+	
+	vec x,y,z,w;
+	x << -2.0 << 0.0 << 10.0;
+	y << -2.0 << 2.0 << 10.00;
+	z << 4.0 << 4.0 << 7.0;
+	w << 0.0 << 0.0 << 6.0;
+
+	Triangle t(centro, centro2, x, materialSphereB);
+	Triangle t3(y, z, x, materialSphereB);
+	Triangle t4(centro, centro2, w, materialSphereB);
+	Triangle t5(y, z, w, materialSphereB);
+	objetos.push_back(&t);
+	objetos.push_back(&t3);
+	objetos.push_back(&t4);
+	objetos.push_back(&t5);
+
 	vec a1, a2, a3, a4;
 	a1 << -8.0 << -1.0 << 0.0;
 	a2 << 8.0 << -1.0 << 0.0;
