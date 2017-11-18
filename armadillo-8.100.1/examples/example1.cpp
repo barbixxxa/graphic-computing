@@ -198,7 +198,7 @@ int findNext(string s, int start, char c)
 }
 
 vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { // recebe o nome do arquivo e o material do objeto
-	
+
 	int f1, f2, f3;
 	vec v1, v2, v3;
 	std::vector<Vertice> vertices;
@@ -206,13 +206,19 @@ vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { //
 	Face face;
 	Vertice v;
 	std::vector<Object*> objetos;
-	mat rot;
-	double sent = 0.0174; //seno de 1 grau, se for grande nao aparece na imagem
-	double cost = 0.9998; //cos de 1 grau
+	mat rotY, rotX;
+	double sent = 0.707106; //seno de 45 graus
+	double cost = 0.707106; //cos de 45 graus
+	double senj = -0.5; //seno de 30 graus
+	double cosj = 0.866025; //cos de 45 graus
 
-	/*rot << cost << 0.0 << -sent << endr //matriz de rotacao
+	rotY << cost << 0.0 << -sent << endr //matriz de rotacao
 		<< 0.0 << 1.0 << 0.0 << endr
-		<< sent << 0.0 << cost;*/
+		<< sent << 0.0 << cost;
+
+	rotX << 1.0 << 0.0 << 0.0 << endr //matriz de rotacao
+		<< 0.0 << cosj << -senj << endr
+		<< 0.0 << senj << cosj;
 
 
 	std::fstream myfile(nomeArq, std::fstream::in);
@@ -225,59 +231,65 @@ vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { //
 
 			if (type == "#" || type == "") {
 				continue;
-			}else 
+			}
+			else
 				if (type == "v") {
-				float x, y, z;
-				stream >> x >> y >> z; //pega as coordenadas x,y,z do arquivo
-				v.coordenada << x << y << (z+10); //cria o vertice com as coordenadas
-				//v.coordenada = rot * v.coordenada; //multiplica as coordenadas pela matriz de rotacao
-				vertices.push_back(v); //adiciona o vertice ao vector
+					float x, y, z;
+					stream >> x >> y >> z; //pega as coordenadas x,y,z do arquivo
+					v.coordenada << x << y << z; //cria o vertice com as coordenadas
 
-			}else
-				if (type == "vn") {
-					float t, r, s;
-					stream >> t >> r >> s;
-					continue;
+					v.coordenada = rotY * v.coordenada; //multiplica as coordenadas pela matriz de rotacao em torn ode Y
+					v.coordenada = rotX * v.coordenada; //multiplica as coordenadas pela matriz de rotacao em torn ode X
+					v.coordenada.at(2) = v.coordenada.at(2) + 10.0;
+					vertices.push_back(v); //adiciona o vertice ao vector
 
-				}else
-					if (type == "f") {
-						
-						/*int numDeBarras = std::count(line.begin(), line.end(), '/');
-						char c = '/';
-						cout  << line.find(c) << numDeBarras;
-						cin.get();
+				}
+				else
+					if (type == "vn") {
+						float t, r, s;
+						stream >> t >> r >> s;
+						continue;
 
-						if (numDeBarras == 0) {
+					}
+					else
+						if (type == "f") {
+
+							/*int numDeBarras = std::count(line.begin(), line.end(), '/');
+							char c = '/';
+							cout  << line.find(c) << numDeBarras;
+							cin.get();
+
+							if (numDeBarras == 0) {
 							stream >> f >> g >> h;
-						}
-						else if (numDeBarras == 3) {
+							}
+							else if (numDeBarras == 3) {
 							int barraN1 = findNext(line, 0, '/' );
 							int barraN2 = findNext(line, barraN1, '/');
 							f = stoi(line.substr(0, barraN1)); //pega a o primeiro vertice da face
 							g = stoi(line.substr((barraN1+1), barraN2));
 							h = stoi(line.substr((barraN2), line.length()));
-						//Ta tudo errado
+							//Ta tudo errado
+
+							}
+							else if (numDeBarras == 6) {
+
+							}*/
+
+
+							int f, g, h;
+							stream >> f >> g >> h;
+
+							face.a = (f - 1);
+							face.b = (g - 1);//cria a face com os vertices
+							face.c = (h - 1);
+
+							faces.push_back(face);
+
 
 						}
-						else if (numDeBarras == 6) {
-
-						}*/
-
-
-					int f, g, h;
-					stream >> f >> g >> h;
- 
-					face.a = (f - 1);
-					face.b = (g - 1);//cria a face com os vertices
-					face.c = (h - 1);
-
-					faces.push_back(face);
-
-
-				}
-				else {
-					//não faz nada
-					}
+						else {
+							//não faz nada
+						}
 
 
 		}
@@ -338,63 +350,26 @@ int main() {
 	materialTriangle.ke << 0.0 << 0.0 << 0.0;
 	materialTriangle.shininess = 20.0;
 
-	Material materialSphere;
-	materialSphere.kd << 0.0 << 0.0 << 255.0;
-	materialSphere.ke << 255.0 << 255.0 << 255.0;
-	materialSphere.shininess = 60.0;
-
-	Material materialSphereB;
-	materialSphereB.kd << 255.0 << 0.0 << 0.0;
-	materialSphereB.ke << 255.0 << 255.0 << 255.0;
-	materialSphereB.shininess = 20.0;
-
 	ofstream output;
 	output.open("imagem.pgm");
 	output << "P3" << endl;
 	output << "800 600" << endl;
 	output << "255" << endl;
-	
 
-	
+
+
 	vec origin;
 	origin << 0.0 << 0.0 << 0.0;
 	vec centro;
 	centro << 0.0 << 0.0 << 10.0;
 	vec centro2;
 	centro2 << 2.0 << 0.0 << 10.0;
-	
+
 	std::vector<Object*> objetos;
-	//objetos = loadObject("cubonovo.txt", materialTriangle); //carregar objeto
-	objetos.push_back(new Sphere(centro, 1.0, materialSphere));
-	objetos.push_back(new Sphere(centro2, 1.0, materialSphereB));
-	
-	vec x,y,z,w;
-	x << -2.0 << 0.0 << 10.0;
-	y << -2.0 << 2.0 << 10.00;
-	z << 4.0 << 4.0 << 7.0;
-	w << 0.0 << 0.0 << 6.0;
+	objetos = loadObject("cube.txt", materialTriangle); //carregar objeto
 
-	Triangle t(centro, centro2, x, materialSphereB);
-	Triangle t3(y, z, x, materialSphereB);
-	Triangle t4(centro, centro2, w, materialSphereB);
-	Triangle t5(y, z, w, materialSphereB);
-	objetos.push_back(&t);
-	objetos.push_back(&t3);
-	objetos.push_back(&t4);
-	objetos.push_back(&t5);
-
-	vec a1, a2, a3, a4;
-	a1 << -8.0 << -1.0 << 0.0;
-	a2 << 8.0 << -1.0 << 0.0;
-	a3 << -8.0 << -1.0 << 20.0;
-	a4 << 8.0 << -1.0 << 20.0;
-
-	Triangle t1(a1, a2, a3, materialSphere);
-	Triangle t2(a2, a3, a4, materialSphere);
 	std::vector<Luz> luzes;
 	luzes.push_back(luz);
-	objetos.push_back(&t1);
-	objetos.push_back(&t2);
 
 	for (int linha = 0; linha < 600; ++linha) {
 		for (int coluna = 0; coluna < 800; ++coluna) {
@@ -424,10 +399,10 @@ int main() {
 				for (int li = 0; li < luzes.size(); ++li) {
 					Luz luz_atual = luzes[li];
 					vec l = luz_atual.pos - da.p;
-					
+
 					da.normal /= norm(da.normal);
 					if (da.flipNormal && dot(da.normal, l) < 0.0) da.normal *= -1.0;
-					
+
 					Intersection shadow;
 					Ray r2(da.p, l);
 					l /= norm(l);
@@ -445,7 +420,7 @@ int main() {
 						cor += (da.material.kd % luz_atual.radiancia)*std::max(0.0, dot(da.normal, l)) +
 							(da.material.ke % luz_atual.radiancia)*pow(std::max(0.0, dot(h, da.normal)), da.material.shininess);
 					}
-					
+
 				}
 
 				output << std::min(255, int(cor(0))) << " "
