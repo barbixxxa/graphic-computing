@@ -357,7 +357,7 @@ int main() {
 	centro << 0.0 << 0.0 << 10.0;
 
 	std::vector<Object*> objetos;
-	objetos = loadObject("dodecahedron.txt", materialTriangle); //carregar objeto
+	objetos = loadObject("cube.txt", materialTriangle); //carregar objeto
 	std::vector<Luz> luzes;
 	luzes.push_back(luz);
 

@@ -58,14 +58,18 @@ struct Intersection {
 	vec p;
 	vec normal;
 	Material material;
-	Intersection(double t, const vec& p, const vec& normal, Material material) : t(t), p(p), normal(normal), material(material) {}
-	Intersection() : t(-1.0) {}
+	bool flipNormal;
+
+	Intersection(double t, const vec& p, const vec& normal, Material material) : t(t), p(p), normal(normal), material(material), flipNormal(false) {}
+	Intersection() : t(-1.0), flipNormal(false) {}
+	Intersection(const Intersection& i) : t(i.t), p(i.p), normal(i.normal), material(i.material), flipNormal(i.flipNormal) {}
 
 	Intersection& operator = (const Intersection& i) {
 		t = i.t;
 		p = i.p;
 		normal = i.normal;
 		material = i.material;
+		flipNormal = i.flipNormal;
 		return *this;
 	}
 };
@@ -143,15 +147,10 @@ public:
 		M3.insert_cols(1, A_ - r.origin);
 		M3.insert_cols(2, r.direction);
 
-		//t
-		/*M4.insert_cols(0, A_ - B_);
-		M4.insert_cols(1, A_ - C_);
-		M4.insert_cols(2, A_ - r.origin);*/
 
 		double detM = det(M);
 		double beta = det(M2) / (detM);
 		double gamma = det(M3) / (detM);
-		//da.t = det(M4) / (detM);
 
 		const vec& ba = B_ - A_;
 		const vec& ca = C_ - A_;
@@ -163,15 +162,174 @@ public:
 		if ((gamma<0) || (gamma>1)) return false;
 		if ((beta<0) || (beta>(1.0 - gamma))) return false;
 
-		//da.normal = cross(B_ - A_, C_ - A_);
 		da.p = r.origin + r.direction *da.t;
 		da.material = material_;
+		da.flipNormal = true;
 		return true;
 	}
 };
 
+struct Vertice {
+	vec coordenada;
+
+	Vertice& operator = (const Vertice& vertice) {
+		coordenada = vertice.coordenada;
+		return *this;
+	}
+};
+
+struct Face {
+	int a, b, c;
+
+	Face& operator = (const Face& face) {
+		a = face.a;
+		b = face.b;
+		c = face.c;
+		return *this;
+	}
+};
+
+int findNext(string s, int start, char c)
+{
+	string sub = s.substr(start, s.length());
+	int r;
+	r = sub.find(c);
+	return r;
+}
+
+vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { // recebe o nome do arquivo e o material do objeto
+
+	int f1, f2, f3;
+	vec v1, v2, v3;
+	std::vector<Vertice> vertices;
+	std::vector<Face> faces;
+	Face face;
+	Vertice v;
+	std::vector<Object*> objetos;
+	mat rotY, rotX;
+	double sent = 0.707106; //seno de 45 graus
+	double cost = 0.707106; //cos de 45 graus
+	double senj = -0.5; //seno de 30 graus
+	double cosj = 0.866025; //cos de 45 graus
+
+	rotY << cost << 0.0 << -sent << endr //matriz de rotacao
+		<< 0.0 << 1.0 << 0.0 << endr
+		<< sent << 0.0 << cost;
+
+	rotX << 1.0 << 0.0 << 0.0 << endr //matriz de rotacao
+		<< 0.0 << cosj << -senj << endr
+		<< 0.0 << senj << cosj;
+
+
+	std::fstream myfile(nomeArq, std::fstream::in);
+	if (myfile.is_open()) {
+		std::string line;
+		while (getline(myfile, line)) {
+			std::stringstream stream(line, std::stringstream::in);
+			std::string type;
+			stream >> type;
+
+			if (type == "#" || type == "") {
+				continue;
+			}
+			else
+				if (type == "v") {
+					float x, y, z;
+					stream >> x >> y >> z; //pega as coordenadas x,y,z do arquivo
+					v.coordenada << x << y << z; //cria o vertice com as coordenadas
+
+					v.coordenada = rotY * v.coordenada; //multiplica as coordenadas pela matriz de rotacao em torn ode Y
+					v.coordenada = rotX * v.coordenada; //multiplica as coordenadas pela matriz de rotacao em torn ode X
+					v.coordenada.at(2) = v.coordenada.at(2) + 10.0;
+					vertices.push_back(v); //adiciona o vertice ao vector
+
+				}
+				else
+					if (type == "vn") {
+						float t, r, s;
+						stream >> t >> r >> s;
+						continue;
+
+					}
+					else
+						if (type == "f") {
+
+							/*int numDeBarras = std::count(line.begin(), line.end(), '/');
+							char c = '/';
+							cout  << line.find(c) << numDeBarras;
+							cin.get();
+
+							if (numDeBarras == 0) {
+							stream >> f >> g >> h;
+							}
+							else if (numDeBarras == 3) {
+							int barraN1 = findNext(line, 0, '/' );
+							int barraN2 = findNext(line, barraN1, '/');
+							f = stoi(line.substr(0, barraN1)); //pega a o primeiro vertice da face
+							g = stoi(line.substr((barraN1+1), barraN2));
+							h = stoi(line.substr((barraN2), line.length()));
+							//Ta tudo errado
+
+							}
+							else if (numDeBarras == 6) {
+
+							}*/
+
+
+							int f, g, h;
+							stream >> f >> g >> h;
+
+							face.a = (f - 1);
+							face.b = (g - 1);//cria a face com os vertices
+							face.c = (h - 1);
+
+							faces.push_back(face);
+
+
+						}
+						else {
+							//não faz nada
+						}
+
+
+		}
+
+
+
+		for (int i = 0; i < faces.size(); ++i) {
+
+			f1 = faces[i].a; //pega os pontos que fazem parte da face
+			f2 = faces[i].b;
+			f3 = faces[i].c;
+
+			v1 = vertices[f3].coordenada; //pega as coordenadas do ponto
+			v2 = vertices[f2].coordenada;
+			v3 = vertices[f1].coordenada;
+
+			cout << "f1 - " << f1 << endl;
+			cout << "f2 - " << f2 << endl;
+			cout << "f3 - " << f3 << endl;
+
+			cout << "v1 - " << v1 << endl;
+			cout << "v2 - " << v2 << endl;
+			cout << "v3 - " << v3 << endl;
+
+
+			objetos.push_back(new Triangle(v1, v2, v3, materialTriangle)); //adiciona o objeto ao vetor
+		}
+
+	}
+	else cout << "Unable to open file";
+
+
+	myfile.close();
+	//cin.get();
+	return objetos;
+}
+
 
 int main() {
+
 	double intensidade = 0.9;
 	vec posicao_luz;
 	posicao_luz << -5.0 << 8.0 << 0.0;
@@ -181,28 +339,11 @@ int main() {
 	luz.pos = posicao_luz;
 	luz.radiancia = radiancia_luz;
 
-	Luz luz2;
-	luz2.pos << 5.0 << -8.0 << 0.0;
-	luz2.radiancia << 0.1 << 0.9 << 0.1;
-
-	Luz luz3;
-	luz3.pos << 5.0 << -8.0 << 2.0;
-	luz3.radiancia << 0.9 << 0.1 << 0.1;
-
-	Luz luz4;
-	luz4.pos << 5.0 << -8.0 << 2.0;
-	luz4.radiancia << 0.1 << 0.1 << 0.9;
-
 	mat k;
 	k << 1000.0 << 0.0 << 400.0 << endr
 		<< 0.0 << -1000.0 << 300.0 << endr
 		<< 0.0 << 0.0 << 1.0;
 	mat invk = k.i();
-
-	Material materialSphere;
-	materialSphere.kd << 0.0 << 0.0 << 255.0;
-	materialSphere.ke << 255.0 << 255.0 << 255.0;
-	materialSphere.shininess = 60.0;
 
 	Material materialTriangle;
 	materialTriangle.kd << 255.0 << 255.0 << 255.0;
@@ -215,23 +356,18 @@ int main() {
 	output << "800 600" << endl;
 	output << "255" << endl;
 
+
+
 	vec origin;
 	origin << 0.0 << 0.0 << 0.0;
 	vec centro;
 	centro << 0.0 << 0.0 << 10.0;
-	vec A, B, C;
-	A << 4.0 << 0.0 << 10.0;
-	B << 0.0 << 3.0 << 5.0;
-	C << 0.0 << 0.0 << 10.0;
 
-	std::vector <Object*> objetos;
+	std::vector<Object*> objetos;
+	objetos = loadObject("cube.txt", materialTriangle); //carregar objeto
+
 	std::vector<Luz> luzes;
-	objetos.push_back(new Sphere(centro, 2.0, materialSphere));
-	objetos.push_back(new Triangle(A, B, C, materialTriangle));
 	luzes.push_back(luz);
-	luzes.push_back(luz2);
-	//luzes.push_back(luz3);
-	//luzes.push_back(luz4);
 
 	for (int linha = 0; linha < 600; ++linha) {
 		for (int coluna = 0; coluna < 800; ++coluna) {
@@ -261,13 +397,28 @@ int main() {
 				for (int li = 0; li < luzes.size(); ++li) {
 					Luz luz_atual = luzes[li];
 					vec l = luz_atual.pos - da.p;
-					l /= norm(l);
+
 					da.normal /= norm(da.normal);
-					if (dot(da.normal, l) < 0.0) da.normal *= -1.0;
-					vec h = (luz_atual.pos - da.p) + da.normal;
+					if (da.flipNormal && dot(da.normal, l) < 0.0) da.normal *= -1.0;
+
+					Intersection shadow;
+					Ray r2(da.p, l);
+					l /= norm(l);
+					vec h = l + da.normal;
 					h /= norm(h);
-					cor += (da.material.kd % luz_atual.radiancia)*std::max(0.0, dot(da.normal, l)) +
-						(da.material.ke % luz_atual.radiancia)*pow(std::max(0.0, dot(h, da.normal)), da.material.shininess);
+					bool paint = true;
+					for (int o = 0; o < objetos.size(); ++o) {
+						bool hit = objetos[o]->intersect(r2, shadow);
+						if (hit && (shadow.t > 0.0) && (shadow.t < 1.0)) {
+							paint = false;
+							break;
+						}
+					}
+					if (paint) {
+						cor += (da.material.kd % luz_atual.radiancia)*std::max(0.0, dot(da.normal, l)) +
+							(da.material.ke % luz_atual.radiancia)*pow(std::max(0.0, dot(h, da.normal)), da.material.shininess);
+					}
+
 				}
 
 				output << std::min(255, int(cor(0))) << " "
@@ -282,7 +433,3 @@ int main() {
 	output.close();
 	return 0;
 }
-
-
-
-// Objetivo = leitor de .obj (arquivo vindo do blender,maya...)

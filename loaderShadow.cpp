@@ -332,7 +332,7 @@ int main() {
 
 	double intensidade = 0.9;
 	vec posicao_luz;
-	posicao_luz << -5.0 << 4.0 << 8.0;
+	posicao_luz << -5.0 << 8.0 << 0.0;
 	vec radiancia_luz;
 	radiancia_luz << intensidade << intensidade << intensidade;
 	Luz luz;
@@ -362,8 +362,6 @@ int main() {
 	origin << 0.0 << 0.0 << 0.0;
 	vec centro;
 	centro << 0.0 << 0.0 << 10.0;
-	vec centro2;
-	centro2 << 2.0 << 0.0 << 10.0;
 
 	std::vector<Object*> objetos;
 	objetos = loadObject("cube.txt", materialTriangle); //carregar objeto
