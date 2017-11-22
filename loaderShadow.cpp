@@ -364,7 +364,7 @@ int main() {
 	centro << 0.0 << 0.0 << 10.0;
 
 	std::vector<Object*> objetos;
-	objetos = loadObject("cube.txt", materialTriangle); //carregar objeto
+	objetos = loadObject("dodecahedron.txt", materialTriangle); //carregar objeto
 
 	std::vector<Luz> luzes;
 	luzes.push_back(luz);
@@ -399,7 +399,7 @@ int main() {
 					vec l = luz_atual.pos - da.p;
 
 					da.normal /= norm(da.normal);
-					if (da.flipNormal && dot(da.normal, l) < 0.0) da.normal *= -1.0;
+					//if (da.flipNormal && dot(da.normal, l) < 0.0) da.normal *= -1.0;
 
 					Intersection shadow;
 					Ray r2(da.p, l);
@@ -409,7 +409,7 @@ int main() {
 					bool paint = true;
 					for (int o = 0; o < objetos.size(); ++o) {
 						bool hit = objetos[o]->intersect(r2, shadow);
-						if (hit && (shadow.t > 0.0) && (shadow.t < 1.0)) {
+						if (hit && (shadow.t > 0.0001) && (shadow.t < 1.0)) {
 							paint = false;
 							break;
 						}

@@ -237,9 +237,10 @@ vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { //
 					float x, y, z;
 					stream >> x >> y >> z; //pega as coordenadas x,y,z do arquivo
 					v.coordenada << x << y << z; //cria o vertice com as coordenadas
-
+					
 					v.coordenada = rotY * v.coordenada; //multiplica as coordenadas pela matriz de rotacao em torn ode Y
 					v.coordenada = rotX * v.coordenada; //multiplica as coordenadas pela matriz de rotacao em torn ode X
+					v.coordenada *= 15.0;
 					v.coordenada.at(2) = v.coordenada.at(2) + 10.0;
 					vertices.push_back(v); //adiciona o vertice ao vector
 
@@ -305,7 +306,7 @@ vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { //
 			v1 = vertices[f3].coordenada; //pega as coordenadas do ponto
 			v2 = vertices[f2].coordenada;
 			v3 = vertices[f1].coordenada;
-
+			/*
 			cout << "f1 - " << f1 << endl;
 			cout << "f2 - " << f2 << endl;
 			cout << "f3 - " << f3 << endl;
@@ -313,13 +314,13 @@ vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { //
 			cout << "v1 - " << v1 << endl;
 			cout << "v2 - " << v2 << endl;
 			cout << "v3 - " << v3 << endl;
-
+			*/
 
 			objetos.push_back(new Triangle(v1, v2, v3, materialTriangle)); //adiciona o objeto ao vetor
 		}
 
 	}
-	else cout << "Unable to open file";
+	//else cout << "Unable to open file";
 
 
 	myfile.close();
@@ -364,7 +365,7 @@ int main() {
 	centro << 0.0 << 0.0 << 10.0;
 
 	std::vector<Object*> objetos;
-	objetos = loadObject("cube.txt", materialTriangle); //carregar objeto
+	objetos = loadObject("bunny.txt", materialTriangle); //carregar objeto
 
 	std::vector<Luz> luzes;
 	luzes.push_back(luz);
@@ -409,7 +410,7 @@ int main() {
 					bool paint = true;
 					for (int o = 0; o < objetos.size(); ++o) {
 						bool hit = objetos[o]->intersect(r2, shadow);
-						if (hit && (shadow.t > 0.0) && (shadow.t < 1.0)) {
+						if (hit && (shadow.t > 0.001) && (shadow.t < 1.0)) {
 							paint = false;
 							break;
 						}
