@@ -283,7 +283,7 @@ vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { //
 									faces.push_back(face);
 								}
 								else {
-									//n„o faz nada
+									//n√£o faz nada
 								}
 
 
