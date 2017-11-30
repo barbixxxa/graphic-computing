@@ -207,6 +207,7 @@ vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { //
 	Vertice v;
 	std::vector<Object*> objetos;
 	mat rotY, rotX;
+	float mult_coord, somar_z;
 	double sent = 0.707106; //seno de 45 graus
 	double cost = 0.707106; //cos de 45 graus
 	double senj = -0.5; //seno de 30 graus
@@ -231,7 +232,14 @@ vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { //
 
 			if (type == "#" || type == "") {
 				continue;
-			}
+			}else
+				if (type == "m") {
+					stream >> mult_coord; //valor para multiplicar todas as coordenadas
+				}
+				else
+					if (type == "z") {
+						stream >> somar_z; // valor para somar na coordenada z
+					}
 			else
 				if (type == "v") {
 					float x, y, z;
@@ -240,8 +248,8 @@ vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { //
 					
 					v.coordenada = rotY * v.coordenada; //multiplica as coordenadas pela matriz de rotacao em torn ode Y
 					v.coordenada = rotX * v.coordenada; //multiplica as coordenadas pela matriz de rotacao em torn ode X
-					v.coordenada *= 15.0;
-					v.coordenada.at(2) = v.coordenada.at(2) + 10.0;
+					v.coordenada.at(2) = v.coordenada.at(2) + somar_z; // soma um valor a coordenada z para que possa ser vista
+					v.coordenada *= mult_coord; //multiplica todas as coordenadas por um valor, para aumentar ou diminuir o tamanho da img
 					vertices.push_back(v); //adiciona o vertice ao vector
 
 				}
@@ -254,39 +262,12 @@ vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { //
 					}
 					else
 						if (type == "f") {
-
-							/*int numDeBarras = std::count(line.begin(), line.end(), '/');
-							char c = '/';
-							cout  << line.find(c) << numDeBarras;
-							cin.get();
-
-							if (numDeBarras == 0) {
-							stream >> f >> g >> h;
-							}
-							else if (numDeBarras == 3) {
-							int barraN1 = findNext(line, 0, '/' );
-							int barraN2 = findNext(line, barraN1, '/');
-							f = stoi(line.substr(0, barraN1)); //pega a o primeiro vertice da face
-							g = stoi(line.substr((barraN1+1), barraN2));
-							h = stoi(line.substr((barraN2), line.length()));
-							//Ta tudo errado
-
-							}
-							else if (numDeBarras == 6) {
-
-							}*/
-
-
 							int f, g, h;
 							stream >> f >> g >> h;
-
 							face.a = (f - 1);
 							face.b = (g - 1);//cria a face com os vertices
 							face.c = (h - 1);
-
 							faces.push_back(face);
-
-
 						}
 						else {
 							//não faz nada
@@ -306,25 +287,16 @@ vector<Object*> loadObject(const string nomeArq, Material materialTriangle) { //
 			v1 = vertices[f3].coordenada; //pega as coordenadas do ponto
 			v2 = vertices[f2].coordenada;
 			v3 = vertices[f1].coordenada;
-			/*
-			cout << "f1 - " << f1 << endl;
-			cout << "f2 - " << f2 << endl;
-			cout << "f3 - " << f3 << endl;
-
-			cout << "v1 - " << v1 << endl;
-			cout << "v2 - " << v2 << endl;
-			cout << "v3 - " << v3 << endl;
-			*/
+			
 
 			objetos.push_back(new Triangle(v1, v2, v3, materialTriangle)); //adiciona o objeto ao vetor
 		}
 
 	}
-	//else cout << "Unable to open file";
+	else cout << "Unable to open file";
 
 
 	myfile.close();
-	//cin.get();
 	return objetos;
 }
 
@@ -365,7 +337,7 @@ int main() {
 	centro << 0.0 << 0.0 << 10.0;
 
 	std::vector<Object*> objetos;
-	objetos = loadObject("bunny.txt", materialTriangle); //carregar objeto
+	objetos = loadObject("cube.txt", materialTriangle); //carregar objeto
 
 	std::vector<Luz> luzes;
 	luzes.push_back(luz);
